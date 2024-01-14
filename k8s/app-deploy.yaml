@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-user-profile
+  labels:
+    app: s-u-p
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s-u-p
+  template:
+    metadata:
+      labels:
+        app: s-u-p
+    spec:
+      serviceAccountName: vault
+      containers:
+        - name: sup
+          image: mdsahiloss/vault-simple-user-profile-page:latest
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          env:
+            - name: VAULT_ADDR
+              value: "http://vault:8200"
+            - name: JWT_PATH
+              value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            - name: DATABASE_HOST
+              value: "mongodb:27017"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: vaultToken
+                  name: vault
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-user-profile-svc
+spec:
+  selector:
+    app: s-u-p
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
