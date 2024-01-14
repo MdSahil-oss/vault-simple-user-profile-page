@@ -1,6 +1,6 @@
 pipeline {
   environment {
-    dockerimagename = "mdsahiloss/simple-user-profile-page"
+    dockerimagename = "mdsahiloss/vault-simple-user-profile-page"
     dockerImage = ""
   }
   agent any
