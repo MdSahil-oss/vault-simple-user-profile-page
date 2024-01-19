@@ -2,73 +2,80 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo-hl-svc
+  name: mongodb-svc
   labels:
-    svc: mongo-hl
+    app: mongodb
 spec:
   ports:
-    - port: 27017
-      name: db
-      targetPort: 27017
+    - name: mongodb
+      port: 27017
   clusterIP: None
   selector:
-    database: mongo-sfs
+    app: mongodb
 
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mongo-sfs
+  name: mongodb
 spec:
   selector:
     matchLabels:
-      database: mongo-sfs
-  serviceName: mongo-hl-svc
-  replicas: 2
+      app: mongodb
+  serviceName: mongodb-svc
+  replicas: 3
   template:
     metadata:
       labels:
-        database: mongo-sfs
+        app: mongodb
     spec:
       containers:
-        - name: mongo
+        - name: mongodb
           image: mongo:latest
-          ports:
-            - containerPort: 27017
-              name: db
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
-              value: username
-              # valueFrom:
-              #   secretKeyRef:
-              #     name: mongo-secret
-              #     key: username
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: username
             - name: MONGO_INITDB_ROOT_PASSWORD
-              value: password
-              # valueFrom:
-              #   secretKeyRef:
-              #     name: mongo-secret
-              #     key: password
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: password
+
+          command:
+            - "mongod"
+            - "--bind_ip"
+            - "0.0.0.0"
+            - "--replSet"
+            - "MainRepSet"
+          resources:
+            requests:
+              cpu: "0.2"
+              memory: 200Mi
+          ports:
+            - name: mongodb
+              containerPort: 27017
           volumeMounts:
-            - name: sup-pvc
+            - name: data
               mountPath: /data/db
   volumeClaimTemplates:
     - metadata:
-        name: sup-pvc
+        name: data
       spec:
-        storageClassName: "standard"
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            storage: 2Gi
+            storage: 1Gi
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo-svc
+  name: mongodb
   labels:
-    svc: mongo
+    svc: mongodb
 spec:
   ports:
     - port: 27017
