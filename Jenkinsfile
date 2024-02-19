@@ -32,10 +32,10 @@ pipeline {
     stage('Deploying Application container to Kubernetes') {
       steps {
             withKubeConfig([
-                        clusterName: 'minikube',
+                        clusterName: 'cluster-name',
                         namespace: 'default',
-                        contextName: 'jenkins-minikube',
-                        serverUrl:   'https://192.168.49.2:8443',
+                        contextName: 'jenkins',
+                        serverUrl:   'server-url',
                         credentialsId: 'k8s-creadentials'
                         ]) {
             sh 'kubectl delete -f ./k8s/app-deploy.yaml && kubectl apply -f ./k8s/app-deploy.yaml'
